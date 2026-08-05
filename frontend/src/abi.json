@@ -1,0 +1,19 @@
+{
+  "SampleNFT": [
+    "function mint(address to, string memory uri) public",
+    "function approve(address to, uint256 tokenId) public",
+    "function getApproved(uint256 tokenId) public view returns (address)",
+    "function isApprovedForAll(address owner, address operator) public view returns (bool)",
+    "function ownerOf(uint256 tokenId) public view returns (address)",
+    "function tokenURI(uint256 tokenId) public view returns (string memory)"
+  ],
+  "NFTMarketplace": [
+    "function listNFT(address _nftContract, uint256 _tokenId, uint256 _price) external",
+    "function buyNFT(address _nftContract, uint256 _tokenId) external payable",
+    "function createAuction(address _nftContract, uint256 _tokenId, uint256 _minPrice, uint256 _duration) external",
+    "function bid(address _nftContract, uint256 _tokenId) external payable",
+    "function endAuction(address _nftContract, uint256 _tokenId) external",
+    "function listings(address, uint256) public view returns (address seller, address nftContract, uint256 tokenId, uint256 price, bool isActive)",
+    "function auctions(address, uint256) public view returns (address seller, address nftContract, uint256 tokenId, uint256 minPrice, uint256 endTime, address highestBidder, uint256 highestBid, bool isActive)"
+  ]
+}
