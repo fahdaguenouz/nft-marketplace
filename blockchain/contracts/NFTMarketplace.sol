@@ -31,6 +31,9 @@ contract NFTMarketplace is ReentrancyGuard, IERC721Receiver {
     // Mapping from NFT contract -> Token ID -> Auction
     mapping(address => mapping(uint256 => Auction)) public auctions;
 
+    // Mapping for pending returns for failed auction bids or refunds (Pull over Push)
+    mapping(address => uint256) public pendingReturns;
+
     event NFTListed(address indexed seller, address indexed nftContract, uint256 indexed tokenId, uint256 price);
     event NFTSold(address indexed buyer, address indexed nftContract, uint256 indexed tokenId, uint256 price);
     event AuctionCreated(address indexed seller, address indexed nftContract, uint256 indexed tokenId, uint256 minPrice, uint256 endTime);
@@ -97,8 +100,7 @@ contract NFTMarketplace is ReentrancyGuard, IERC721Receiver {
         require(msg.value > auction.highestBid && msg.value >= auction.minPrice, "Bid too low");
 
         if (auction.highestBidder != address(0)) {
-            (bool success, ) = payable(auction.highestBidder).call{value: auction.highestBid}("");
-            require(success, "Refund failed");
+            pendingReturns[auction.highestBidder] += auction.highestBid;
         }
 
         auction.highestBidder = msg.sender;
@@ -116,14 +118,22 @@ contract NFTMarketplace is ReentrancyGuard, IERC721Receiver {
 
         if (auction.highestBidder != address(0)) {
             IERC721(_nftContract).safeTransferFrom(address(this), auction.highestBidder, _tokenId);
-            (bool success, ) = payable(auction.seller).call{value: auction.highestBid}("");
-            require(success, "Transfer failed");
+            pendingReturns[auction.seller] += auction.highestBid;
 
             emit AuctionEnded(auction.highestBidder, _nftContract, _tokenId, auction.highestBid);
         } else {
             IERC721(_nftContract).safeTransferFrom(address(this), auction.seller, _tokenId);
             emit AuctionEnded(address(0), _nftContract, _tokenId, 0);
         }
+    }
+
+    function withdraw() external nonReentrant {
+        uint256 amount = pendingReturns[msg.sender];
+        require(amount > 0, "No pending returns");
+        pendingReturns[msg.sender] = 0;
+        
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "Withdraw failed");
     }
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {

@@ -15,19 +15,29 @@ function App() {
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
 
+  const initEthers = async (accounts) => {
+    if (accounts.length > 0) {
+      setAccount(accounts[0]);
+      const newProvider = new ethers.BrowserProvider(window.ethereum);
+      setProvider(newProvider);
+      const newSigner = await newProvider.getSigner();
+      setSigner(newSigner);
+    } else {
+      setAccount(null);
+      setSigner(null);
+      localStorage.removeItem("walletConnected");
+    }
+  };
+
   useEffect(() => {
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', (accounts) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-          const newProvider = new ethers.BrowserProvider(window.ethereum);
-          setProvider(newProvider);
-          newProvider.getSigner().then(setSigner);
-        } else {
-          setAccount(null);
-          setSigner(null);
-        }
-      });
+      if (localStorage.getItem("walletConnected") === "true") {
+        window.ethereum.request({ method: 'eth_accounts' })
+          .then(initEthers)
+          .catch(console.error);
+      }
+
+      window.ethereum.on('accountsChanged', initEthers);
     }
   }, []);
 
@@ -35,17 +45,21 @@ function App() {
     if (window.ethereum) {
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setAccount(accounts[0]);
-        const newProvider = new ethers.BrowserProvider(window.ethereum);
-        setProvider(newProvider);
-        const newSigner = await newProvider.getSigner();
-        setSigner(newSigner);
+        await initEthers(accounts);
+        localStorage.setItem("walletConnected", "true");
       } catch (err) {
         console.error("Failed to connect wallet", err);
       }
     } else {
       alert("Please install MetaMask!");
     }
+  };
+
+  const logout = () => {
+    setAccount(null);
+    setProvider(null);
+    setSigner(null);
+    localStorage.removeItem("walletConnected");
   };
 
   return (
@@ -61,6 +75,7 @@ function App() {
                 <>
                   <Link to="/portfolio">Portfolio</Link>
                   <div className="badge">{account.substring(0, 6)}...{account.substring(38)}</div>
+                  <button className="btn btn-outline" onClick={logout} style={{ padding: '0.3rem 0.8rem', fontSize: '0.9rem' }}>Logout</button>
                 </>
               ) : (
                 <button className="btn" onClick={connectWallet}>Connect Wallet</button>
