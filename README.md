@@ -207,8 +207,37 @@ Opens the UI at `http://localhost:5173`.
 3. **Explore page** — View the NFTs listed on the platform.
 4. **Buy an NFT** — Select NFT #0 and purchase it for 1 ETH.
 5. **Bid on an NFT** — Select NFT #1 and place a bid (≥ 0.5 ETH).
-6. **Submit an NFT** — Go to the Submit page, enter the `SampleNFT` contract address and token ID `2` to list your remaining NFT.
+6. **Submit an NFT** — Go to the Submit page to import existing NFTs into the marketplace (see details below).
 7. **Portfolio page** — View your owned NFTs.
+
+---
+
+## How to Submit an NFT
+
+The **Submit Page** (`http://localhost:5173/submit`) allows you to import existing NFTs from a deployed ERC-721 smart contract into the NEONEXUS marketplace so they can be viewed, listed for sale, or auctioned. By default, the marketplace only displays NFTs that are saved in its database. 
+
+### 1. What is the Submit Page for?
+If you mint new NFTs directly from a smart contract or deploy a brand new NFT collection, they won't automatically appear on the marketplace's Explore page. The Submit page bridges this gap by saving the contract address and Token IDs to the backend database, allowing the frontend to fetch their metadata.
+
+### 2. Where to get the Contract Address
+You need the address of the ERC-721 contract where the NFTs were minted. 
+- **If using the provided `SampleNFT` contract:** You can find its address in two places:
+  1. The terminal output after running `npm run deploy`.
+  2. Inside `server/db.json` under `"contracts": { "sampleNFT": "0x..." }`.
+- **If using a custom contract:** Copy the address generated during your deployment.
+
+### 3. Where to get the Token ID and Token Range
+Every NFT has a unique Token ID within its contract (typically starting at 0). 
+- If you ran `npm run samples`, the script automatically minted tokens `#0` through `#5` in the `SampleNFT` contract.
+- **Token ID (Start):** The ID of the first token you want to submit (e.g., `2`).
+- **Token ID Range End (Optional):** If you want to submit a batch of NFTs at once, enter the last Token ID in the sequence (e.g., `5`). The system will import all tokens in the range. If you only want to submit one NFT, leave this field blank.
+
+### 4. Step-by-step Submission
+1. Navigate to the **Submit** page in the frontend.
+2. Paste the **Contract Address** (e.g., the `SampleNFT` address).
+3. Enter the **Token ID (Start)**.
+4. *(Optional)* Enter the **Token Range End** to import multiple.
+5. Click **Add to Marketplace**. Your NFTs will now be visible on the **Explore** page!
 
 ---
 
