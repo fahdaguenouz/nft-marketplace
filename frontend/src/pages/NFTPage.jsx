@@ -125,7 +125,11 @@ function NFTPage() {
           <div className="glass-panel mb-4" style={{ background: 'rgba(0,0,0,0.3)' }}>
             <div className="text-muted mb-4">Direct Sale Price</div>
             <div style={{ fontSize: '2rem', color: 'var(--primary-color)', fontWeight: 'bold' }}>{nft.salePrice} ETH</div>
-            <button className="btn mt-4" onClick={handleBuy} style={{ width: '100%' }}>Buy Now</button>
+            {isOwner ? (
+              <button className="btn mt-4" disabled style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>Your Listing</button>
+            ) : (
+              <button className="btn mt-4" onClick={handleBuy} style={{ width: '100%' }}>Buy Now</button>
+            )}
           </div>
         )}
 
@@ -137,16 +141,21 @@ function NFTPage() {
               Highest Bid: {nft.auctionData.highestBid > 0 ? nft.auctionData.highestBid : nft.auctionData.minPrice} ETH
             </div>
             
-            <div className="flex gap-2 mt-4">
-              <input 
-                type="number" 
-                value={bidAmount} 
-                onChange={e => setBidAmount(e.target.value)} 
-                placeholder="Bid Amount (ETH)" 
-                style={{ marginBottom: 0 }}
-              />
-              <button className="btn" onClick={handleBid}>Place Bid</button>
-            </div>
+            {!isOwner && (
+              <div className="flex gap-2 mt-4">
+                <input 
+                  type="number" 
+                  value={bidAmount} 
+                  onChange={e => setBidAmount(e.target.value)} 
+                  placeholder="Bid Amount (ETH)" 
+                  style={{ marginBottom: 0 }}
+                />
+                <button className="btn" onClick={handleBid}>Place Bid</button>
+              </div>
+            )}
+            {isOwner && (
+              <button className="btn mt-4" disabled style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>Your Auction</button>
+            )}
             <button className="btn btn-outline mt-4" onClick={handleEndAuction} style={{ width: '100%' }}>Settle Auction (If ended)</button>
           </div>
         )}
