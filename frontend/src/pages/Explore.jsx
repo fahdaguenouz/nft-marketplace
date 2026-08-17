@@ -9,6 +9,12 @@ function Explore() {
   const [nfts, setNfts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
 
   useEffect(() => {
     const loadNFTs = async () => {
@@ -47,6 +53,9 @@ function Explore() {
     return true;
   });
 
+  const totalPages = Math.ceil(filteredNfts.length / itemsPerPage);
+  const paginatedNfts = filteredNfts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div>
       <div className="flex justify-between align-center mb-4">
@@ -64,27 +73,51 @@ function Explore() {
       {loading ? (
         <div className="loading">Scanning Blockchain...</div>
       ) : (
-        <div className="nft-grid">
-          {filteredNfts.map((nft, idx) => (
-            <Link to={`/nft/${nft.contract}/${nft.tokenId}`} key={idx}>
-              <div className="glass-card">
-                <div className="nft-image-container">
-                  <img src={nft.image} alt={nft.name} className="nft-image" />
-                </div>
-                <div className="nft-info">
-                  <div className="flex justify-between align-center mb-4" style={{ marginBottom: '8px' }}>
-                    <div className="nft-title" style={{ margin: 0 }}>{nft.name}</div>
-                    <div className="badge">#{nft.tokenId}</div>
+        <>
+          <div className="nft-grid">
+            {paginatedNfts.map((nft, idx) => (
+              <Link to={`/nft/${nft.contract}/${nft.tokenId}`} key={idx}>
+                <div className="glass-card">
+                  <div className="nft-image-container">
+                    <img src={nft.image} alt={nft.name} className="nft-image" />
                   </div>
-                  {nft.salePrice && <div className="nft-price">{nft.salePrice} ETH</div>}
-                  {nft.auctionData && <div className="nft-price">Bid: {nft.auctionData.highestBid > 0 ? nft.auctionData.highestBid : nft.auctionData.minPrice} ETH</div>}
-                  {!nft.salePrice && !nft.auctionData && <div className="text-muted" style={{ fontSize: '0.9rem' }}>Not Listed</div>}
+                  <div className="nft-info">
+                    <div className="flex justify-between align-center mb-4" style={{ marginBottom: '8px' }}>
+                      <div className="nft-title" style={{ margin: 0 }}>{nft.name}</div>
+                      <div className="badge">#{nft.tokenId}</div>
+                    </div>
+                    {nft.salePrice && <div className="nft-price">{nft.salePrice} ETH</div>}
+                    {nft.auctionData && <div className="nft-price">Bid: {nft.auctionData.highestBid > 0 ? nft.auctionData.highestBid : nft.auctionData.minPrice} ETH</div>}
+                    {!nft.salePrice && !nft.auctionData && <div className="text-muted" style={{ fontSize: '0.9rem' }}>Not Listed</div>}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-          {filteredNfts.length === 0 && <p className="text-muted">No artifacts found matching criteria.</p>}
-        </div>
+              </Link>
+            ))}
+            {filteredNfts.length === 0 && <p className="text-muted">No artifacts found matching criteria.</p>}
+          </div>
+        
+        {totalPages > 1 && (
+          <div className="flex justify-center gap-2" style={{ marginTop: '20px' }}>
+            <button 
+              className="btn btn-outline" 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span className="text-muted" style={{ alignSelf: 'center' }}>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button 
+              className="btn btn-outline" 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

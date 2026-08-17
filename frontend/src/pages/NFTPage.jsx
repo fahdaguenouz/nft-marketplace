@@ -11,6 +11,7 @@ function NFTPage() {
   const [nft, setNft] = useState(null);
   const [loading, setLoading] = useState(true);
   const [marketAddr, setMarketAddr] = useState('');
+  const [transfers, setTransfers] = useState([]);
   
   // Forms
   const [listPrice, setListPrice] = useState('');
@@ -25,6 +26,24 @@ function NFTPage() {
       const readProvider = provider || new ethers.JsonRpcProvider("http://127.0.0.1:8545");
       const data = await fetchNFTData(readProvider, contract, tokenId, contracts.marketplace);
       setNft(data);
+      
+      try {
+        const nftContract = new ethers.Contract(contract, abi.SampleNFT, readProvider);
+        const filter = nftContract.filters.Transfer(null, null, tokenId);
+        const events = await nftContract.queryFilter(filter);
+        
+        const transferData = await Promise.all(events.map(async (e) => {
+          const block = await e.getBlock();
+          return {
+            from: e.args[0],
+            to: e.args[1],
+            date: new Date(block.timestamp * 1000).toLocaleString()
+          };
+        }));
+        setTransfers(transferData.reverse());
+      } catch (e) {
+        console.error("Error loading transfers", e);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -175,6 +194,25 @@ function NFTPage() {
             </div>
           </div>
         )}
+
+        <div className="glass-panel mt-4">
+          <h3>Transfer History</h3>
+          {transfers.length === 0 ? (
+            <p className="text-muted mt-2">No transfers found.</p>
+          ) : (
+            <div style={{ marginTop: '15px', maxHeight: '200px', overflowY: 'auto' }}>
+              {transfers.map((tx, idx) => (
+                <div key={idx} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: '0.9rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                    <span style={{ color: 'var(--primary-color)' }}>From: {tx.from.substring(0, 8)}...</span>
+                    <span style={{ color: 'var(--secondary-color)' }}>To: {tx.to.substring(0, 8)}...</span>
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '0.8rem' }}>{tx.date}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

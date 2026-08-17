@@ -25,12 +25,39 @@ function Welcome() {
 
         const readProvider = provider || new ethers.JsonRpcProvider("http://127.0.0.1:8545");
         
-        const dataPromises = nfts.slice(0, 2).map(n => 
+        const dataPromises = nfts.map(n => 
           fetchNFTData(readProvider, n.contract, n.tokenId, contracts.marketplace)
         );
         
-        const nftData = await Promise.all(dataPromises);
-        setFeatured(nftData.filter(n => n !== null));
+        const allNftData = await Promise.all(dataPromises);
+        const validNfts = allNftData.filter(n => n !== null);
+
+        const forSale = validNfts.filter(n => n.salePrice != null);
+        let selectedForSale = null;
+        if (forSale.length > 0) {
+           selectedForSale = forSale[Math.floor(Math.random() * forSale.length)];
+        }
+        
+        const remainingNfts = validNfts.filter(n => n !== selectedForSale);
+        let selectedRandom = null;
+        if (remainingNfts.length > 0) {
+           selectedRandom = remainingNfts[Math.floor(Math.random() * remainingNfts.length)];
+        }
+
+        const toShow = [];
+        if (selectedForSale) toShow.push(selectedForSale);
+        if (selectedRandom) toShow.push(selectedRandom);
+        
+        if (toShow.length < 2 && validNfts.length > toShow.length) {
+            for (let nft of validNfts) {
+               if (!toShow.includes(nft)) {
+                  toShow.push(nft);
+                  if (toShow.length === 2) break;
+               }
+            }
+        }
+        
+        setFeatured(toShow);
       } catch (err) {
         console.error("Error loading featured NFTs", err);
       }
