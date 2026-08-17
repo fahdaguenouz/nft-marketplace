@@ -8,7 +8,8 @@
     "compile": "npm run compile --prefix blockchain",
     "deploy": "npm run deploy --prefix blockchain",
     "samples": "npm run samples --prefix blockchain",
-    "serve": "npm run serve --prefix server",
+    "build": "npm run build --prefix frontend",
+    "serve": "npm run build && npm run serve --prefix server",
     "dev": "npm run dev --prefix frontend"
   },
   "author": "",
