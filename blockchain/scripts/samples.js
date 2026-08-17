@@ -33,7 +33,8 @@ async function main() {
     "/imgs/dog.jpeg",
     "/imgs/frog.jpeg",
     "/imgs/monkey.jpeg",
-    "/imgs/rob.jpeg"
+    "/imgs/rob.jpeg",
+    "/imgs/monk.jpeg"
   ];
   
   const metadatas = [];
@@ -82,7 +83,8 @@ async function main() {
     { contract: sampleNFTAddress, tokenId: 2 },
     { contract: sampleNFTAddress, tokenId: 3 },
     { contract: sampleNFTAddress, tokenId: 4 },
-    { contract: sampleNFTAddress, tokenId: 5 }
+    { contract: sampleNFTAddress, tokenId: 5 },
+    // Token #6 is minted but intentionally NOT added here — use the Submit page to add it!
   ];
   
   fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
