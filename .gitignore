@@ -24,3 +24,4 @@ server/db.json
 *.njsproj
 *.sln
 *.sw?
+.env
