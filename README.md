@@ -129,21 +129,25 @@ npm run samples
 ```
 
 This script:
-- Mints 3 Sample NFTs from `SampleNFT`.
+- Mints **7 Sample NFTs** (tokens #0–#6) from `SampleNFT`.
 - Lists NFT #0 for **direct sale** at 1 ETH.
-- Puts NFT #1 on **auction** with a 0.5 ETH minimum bid.
-- Keeps NFT #2 in your wallet (unlisted).
-- Saves NFTs #0 and #1 to `server/db.json` so they appear in the Explore page.
+- Lists NFT #1 for **direct sale** at 2 ETH.
+- Puts NFT #2 on **auction** with a 0.5 ETH minimum bid.
+- Puts NFT #3 on **auction** with a 0.1 ETH minimum bid.
+- Keeps NFTs #4, #5 in your wallet (unlisted — viewable but not for sale).
+- Saves NFTs #0–#5 to `server/db.json` so they appear in the Explore page.
+- **NFT #6 is minted on-chain but intentionally left out of the database** — use the Submit page to add it manually (see below).
 
 ---
 
-### Step 6 — Start the backend API server
+### Step 6 — Build and Start the backend API server
 
 > 📁 **Run from:** `nft-marketplace/` (project root)
 
 ```bash
 npm run serve
 ```
+*Note: This command builds the frontend UI using Vite and then starts the Express API server on `http://localhost:8080`, serving the production React app.*
 
 Or from the server folder:
 
@@ -184,16 +188,76 @@ Opens the UI at `http://localhost:5173`.
 | Compile | `npm run compile` | Compiles Solidity contracts |
 | Deploy | `npm run deploy` | Deploys contracts to the local network |
 | Seed NFTs | `npm run samples` | Mints and lists sample NFTs |
-| Start API | `npm run serve` | Starts the Express backend on port 8080 |
+| Build UI | `npm run build` | Builds the React frontend for production |
+| Start API | `npm run serve` | Builds the frontend and starts the Express backend on port 8080 |
 | Start UI | `npm run dev` | Starts the Vite frontend on port 5173 |
 
 ---
 
-## MetaMask Configuration
+## Testnet Deployment
+
+To deploy the smart contracts to a testnet (e.g., Sepolia):
+
+1. Go to `blockchain/hardhat.config.js` and add a new network configuration:
+   ```javascript
+   require('dotenv').config();
+   module.exports = {
+     networks: {
+       sepolia: {
+         url: process.env.RPC_URL || "", // e.g. Infura or Alchemy URL
+         accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+       }
+     },
+     // ...
+   };
+   ```
+2. Create a `.env` file in the `blockchain/` directory. You will need two values:
+   - **RPC_URL**: This is the connection endpoint to the blockchain. Register for free on a provider like [Alchemy](https://www.alchemy.com/) or [Infura](https://www.infura.io/), create a new app on the **Sepolia** network, and copy the HTTP URL provided.
+   - **PRIVATE_KEY**: The private key of the wallet deploying the contract. Open your MetaMask extension, select the account you want to use for deployment, click on "Account details", and select "Show private key". **(⚠️ WARNING: Never use a private key that holds real mainnet funds. Always create a dedicated testing account.)**
+   
+   Your `blockchain/.env` should look like this:
+   ```env
+   RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY
+   PRIVATE_KEY=your_metamask_private_key_here
+   ```
+3. From the `nft-marketplace` root, run the deployment command targeting the testnet:
+   ```bash
+   npm run deploy --prefix blockchain -- --network sepolia
+   ```
+   * **Expected Output (Success):** You will see "Deploying NFTMarketplace..." followed by "NFTMarketplace deployed to: 0x..." and similar for SampleNFT. Finally, "Contract addresses saved to server/db.json".
+   * **Expected Output (Error):** If your RPC URL is wrong or your account has no ETH, you will see Hardhat errors like `ProviderError` (insufficient funds) or network connection errors. If your `PRIVATE_KEY` is empty, you will get an `Invalid account` error.
+
+4. Deploy the samples similarly to seed real testnet transactions:
+   ```bash
+   npm run samples --prefix blockchain -- --network sepolia
+   ```
+   * **Note**: Make sure you have testnet ETH in your deployment account! If you get a `ProviderError: insufficient funds for gas` error, it means your wallet is empty. You must get free Sepolia ETH from a faucet (like [Alchemy Faucet](https://sepoliafaucet.com/) or [Infura Faucet](https://www.infura.io/faucet/sepolia)) before deploying. Testnet transactions take 10-15 seconds to confirm.
+
+---
+
+## WalletConnect (Mobile Wallet) isn't showing the QR Code?
+
+The Alchemy RPC_URL (which you correctly put in `blockchain/.env`) is only used for Hardhat to deploy contracts to the Sepolia testnet. It does not control the WalletConnect Mobile UI.
+
+To make the WalletConnect Mobile QR Code appear properly on your frontend, you need a completely different key called a Project ID, and it needs to go in the frontend folder:
+
+1. Go to [Reown Cloud](https://cloud.reown.com/) (formerly WalletConnect) and sign in.
+2. Click "Create Project" (name it whatever you want).
+3. Copy the **Project ID** it gives you (it will be a mix of letters and numbers like `4a0f4a867...`).
+4. Create a new file at `frontend/.env` and add this exact line:
+   ```env
+   VITE_WALLETCONNECT_PROJECT_ID=your_project_id_here
+   ```
+5. Restart your frontend server. The QR modal will now appear properly when clicking "Mobile Wallet".
+
+---
+
+## MetaMask Configuration (Localhost)
 
 1. Open MetaMask → **Add a network manually**:
    - **Network name:** Hardhat Localhost
-   - **RPC URL:** `http://127.0.0.1:8545`
+   - **RPC URL:** `http://127.0.0.1:8545` 
+     *(**Important for Mobile Wallets:** If you are connecting a mobile wallet to your PC's local Hardhat node, `127.0.0.1` won't work because that's the phone's own localhost. You must use your PC's local network IP address instead, e.g., `http://192.168.56.105:8545` or `http://10.0.2.15:8545`. Your phone and PC must be on the same WiFi.)*
    - **Chain ID:** `31337`
    - **Currency symbol:** ETH
 2. Import a test account using one of the private keys printed by `npm run node`.
@@ -214,30 +278,38 @@ Opens the UI at `http://localhost:5173`.
 
 ## How to Submit an NFT
 
-The **Submit Page** (`http://localhost:5173/submit`) allows you to import existing NFTs from a deployed ERC-721 smart contract into the NEONEXUS marketplace so they can be viewed, listed for sale, or auctioned. By default, the marketplace only displays NFTs that are saved in its database. 
+The **Submit Page** (`/submit`) lets you manually register an **already minted** ERC-721 token into the NEONEXUS database so it shows up on the Explore page.
 
-### 1. What is the Submit Page for?
-If you mint new NFTs directly from a smart contract or deploy a brand new NFT collection, they won't automatically appear on the marketplace's Explore page. The Submit page bridges this gap by saving the contract address and Token IDs to the backend database, allowing the frontend to fetch their metadata.
+> [!IMPORTANT]
+> **The NFT must already exist on-chain before you can submit it.** The Submit page does NOT mint a new NFT — it only registers an existing token address + ID into the backend database. If the token doesn't exist on the blockchain, the Explore page will fail to load its image and name.
 
-### 2. Where to get the Contract Address
-You need the address of the ERC-721 contract where the NFTs were minted. 
-- **If using the provided `SampleNFT` contract:** You can find its address in two places:
-  1. The terminal output after running `npm run deploy`.
-  2. Inside `server/db.json` under `"contracts": { "sampleNFT": "0x..." }`.
-- **If using a custom contract:** Copy the address generated during your deployment.
+### ⚙️ How it works
 
-### 3. Where to get the Token ID and Token Range
-Every NFT has a unique Token ID within its contract (typically starting at 0). 
-- If you ran `npm run samples`, the script automatically minted tokens `#0` through `#5` in the `SampleNFT` contract.
-- **Token ID (Start):** The ID of the first token you want to submit (e.g., `2`).
-- **Token ID Range End (Optional):** If you want to submit a batch of NFTs at once, enter the last Token ID in the sequence (e.g., `5`). The system will import all tokens in the range. If you only want to submit one NFT, leave this field blank.
+1. You give it a **Contract Address** (the ERC-721 contract where the NFT lives) and a **Token ID**.
+2. It calls `POST /api/nfts` on the backend, which saves the pair to `server/db.json`.
+3. The Explore page reads the DB and fetches each token's metadata directly from the blockchain via its `tokenURI`.
 
-### 4. Step-by-step Submission
-1. Navigate to the **Submit** page in the frontend.
-2. Paste the **Contract Address** (e.g., the `SampleNFT` address).
-3. Enter the **Token ID (Start)**.
-4. *(Optional)* Enter the **Token Range End** to import multiple.
-5. Click **Add to Marketplace**. Your NFTs will now be visible on the **Explore** page!
+### ✅ Quick Test — Submit Token #6 (without running samples first)
+
+After running `npm run deploy` + `npm run samples`, token **#6** has been minted on-chain but is intentionally NOT in the database. This makes it the perfect test case:
+
+1. Open `server/db.json` and copy the `sampleNFT` contract address (e.g., `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`).
+2. Navigate to the **Submit** page in the frontend.
+3. Paste the **Contract Address**.
+4. Enter **Token ID Start:** `6` (leave Range End blank).
+5. Click **Add to Marketplace** — you will be redirected to Explore and token #6 will now appear!
+
+### 📋 Submitting a Range of NFTs
+
+To import multiple tokens at once (e.g., tokens #4 through #6):
+- **Token ID Start:** `4`
+- **Token ID Range End:** `6`
+
+All tokens in that range will be registered in one click.
+
+### 🔍 Where to find the Contract Address
+- **Terminal output** after running `npm run deploy`: `SampleNFT deployed to: 0x...`
+- **`server/db.json`** under `"contracts": { "sampleNFT": "0x..." }`
 
 ---
 
