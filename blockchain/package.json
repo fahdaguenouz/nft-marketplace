@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "node": "npx hardhat node",
+    "node": "npx hardhat node --hostname 0.0.0.0",
     "compile": "npx hardhat compile",
     "deploy": "npx hardhat run scripts/deploy.js",
     "samples": "npx hardhat run scripts/samples.js"
@@ -17,7 +17,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@openzeppelin/contracts": "^5.6.1",
-    "hardhat": "^2.22.0"
+    "hardhat": "^2.22.0"  
   },
   "dependencies": {
     "dotenv": "^17.4.2"
