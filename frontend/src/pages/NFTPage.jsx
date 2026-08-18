@@ -78,6 +78,7 @@ function NFTPage() {
       const tx = await mktContract.bid(contract, tokenId, { value: ethers.parseEther(bidAmount) });
       await tx.wait();
       alert("Bid placed!");
+      setBidAmount('');
       loadData();
     } catch (e) {
       console.error(e);
@@ -100,6 +101,7 @@ function NFTPage() {
       const tx = await mktContract.listNFT(contract, tokenId, ethers.parseEther(listPrice));
       await tx.wait();
       alert("Listed successfully!");
+      setListPrice('');
       loadData();
     } catch (e) {
       console.error(e);
@@ -127,6 +129,9 @@ function NFTPage() {
       const tx = await mktContract.createAuction(contract, tokenId, ethers.parseEther(auctionMinPrice), durationSeconds);
       await tx.wait();
       alert("Auction created successfully!");
+      setAuctionMinPrice('');
+      setAuctionDurationHours('');
+      setAuctionDurationMinutes('');
       loadData();
     } catch (e) {
       console.error(e);
@@ -206,6 +211,7 @@ function NFTPage() {
                       onChange={e => setBidAmount(e.target.value)} 
                       placeholder="Bid Amount (ETH)" 
                       style={{ marginBottom: 0 }}
+                      min="0"
                     />
                     <button className="btn" onClick={handleBid}>Place Bid</button>
                   </div>
@@ -230,6 +236,7 @@ function NFTPage() {
                 onChange={e => setListPrice(e.target.value)} 
                 placeholder="Price (ETH)" 
                 style={{ marginBottom: 0 }}
+                min="0"
               />
               <button className="btn" onClick={handleList}>List for Sale</button>
             </div>
@@ -240,6 +247,7 @@ function NFTPage() {
                 onChange={e => setAuctionMinPrice(e.target.value)} 
                 placeholder="Min Price (ETH)" 
                 style={{ marginBottom: 0 }}
+                min="0"
               />
               <input 
                 type="number" 
