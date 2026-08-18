@@ -84,6 +84,7 @@ function Submit() {
               onChange={(e) => setStartTokenId(e.target.value)} 
               placeholder="0" 
               required 
+              min="0"
             />
           </div>
           <div style={{ flex: 1 }}>
@@ -93,6 +94,7 @@ function Submit() {
               value={endTokenId} 
               onChange={(e) => setEndTokenId(e.target.value)} 
               placeholder="e.g. 10" 
+              min="0"
             />
           </div>
         </div>
