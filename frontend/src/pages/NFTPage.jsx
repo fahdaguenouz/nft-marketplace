@@ -81,7 +81,7 @@ function NFTPage() {
       loadData();
     } catch (e) {
       console.error(e);
-      alert("Bid failed ,please check the amount");
+      alert("Bid failed ,please check the amount, or the auction status not active ");
     }
   };
 
@@ -152,6 +152,8 @@ function NFTPage() {
   if (!nft) return <div>Artifact not found.</div>;
 
   const isOwner = account && nft.owner.toLowerCase() === account.toLowerCase();
+  const isSeller = account && nft.auctionData?.seller.toLowerCase() === account.toLowerCase();
+  const isAuctionEnded = nft.auctionData && Date.now() >= nft.auctionData.endTime;
 
   return (
     <div className="flex gap-2" style={{ alignItems: 'flex-start' }}>
@@ -190,21 +192,30 @@ function NFTPage() {
               Highest Bid: {nft.auctionData.highestBid > 0 ? nft.auctionData.highestBid : nft.auctionData.minPrice} ETH
             </div>
             
-            {!isOwner && (
-              <div className="flex gap-2 mt-4">
-                <input 
-                  type="number" 
-                  value={bidAmount} 
-                  onChange={e => setBidAmount(e.target.value)} 
-                  placeholder="Bid Amount (ETH)" 
-                  style={{ marginBottom: 0 }}
-                />
-                <button className="btn" onClick={handleBid}>Place Bid</button>
+            {isAuctionEnded ? (
+              <div className="mt-4 p-3 glass-panel text-center" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--secondary-color)' }}>
+                Auction has ended. Please settle it to transfer the NFT and funds.
               </div>
+            ) : (
+              <>
+                {!isSeller && (
+                  <div className="flex gap-2 mt-4">
+                    <input 
+                      type="number" 
+                      value={bidAmount} 
+                      onChange={e => setBidAmount(e.target.value)} 
+                      placeholder="Bid Amount (ETH)" 
+                      style={{ marginBottom: 0 }}
+                    />
+                    <button className="btn" onClick={handleBid}>Place Bid</button>
+                  </div>
+                )}
+                {isSeller && (
+                  <button className="btn mt-4" disabled style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>Your Auction</button>
+                )}
+              </>
             )}
-            {isOwner && (
-              <button className="btn mt-4" disabled style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>Your Auction</button>
-            )}
+            
             <button className="btn btn-outline mt-4" onClick={handleEndAuction} style={{ width: '100%' }}>Settle Auction (If ended)</button>
           </div>
         )}

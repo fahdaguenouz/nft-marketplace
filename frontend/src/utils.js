@@ -36,7 +36,8 @@ export const fetchNFTData = async (provider, contractAddress, tokenId, marketpla
           minPrice: ethers.formatEther(auction.minPrice),
           endTime: Number(auction.endTime) * 1000,
           highestBid: ethers.formatEther(auction.highestBid),
-          highestBidder: auction.highestBidder
+          highestBidder: auction.highestBidder,
+          seller: auction.seller
         };
       }
     } catch (e) {}
