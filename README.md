@@ -329,3 +329,63 @@ All tokens in that range will be registered in one click.
 - **Blockchain:** Solidity · Hardhat · OpenZeppelin
 - **Backend:** Express.js · Lowdb (JSON file DB)
 - **Frontend:** React · Vite · Ethers.js · Vanilla CSS (Glassmorphism & Neon themes)
+
+---
+
+## System Workflow & Data Flow
+
+NEONEXUS relies on a hybrid architecture to ensure both decentralization (via Smart Contracts) and fast performance (via a Backend Indexer).
+
+### 1. Smart Contracts (The Truth)
+The EVM (Ethereum Virtual Machine) acts as the ultimate source of truth. Ownership, pricing, auctions, and bids are completely managed by the deployed Solidity contracts (`NFTMarketplace.sol` and `SampleNFT.sol`).
+
+### 2. Backend Indexer (The Cache)
+Scanning an entire blockchain to find which NFTs exist is extremely slow. Instead, we use a lightweight Express API and a JSON file (`server/db.json`). When a contract is deployed, its address is saved here. When an NFT is minted or manually submitted, its ID is saved here. 
+
+### 3. Frontend UI (The Interface)
+The React application reads the `db.json` file to get the list of known NFTs. Then, for every NFT, it uses `ethers.js` to query the **Smart Contract directly** to get its real-time status (Is it for sale? Who owns it? What is the `tokenURI` for the image?). Transactions (buying, listing, bidding) are signed by MetaMask and sent directly to the blockchain.
+
+### Flow Examples:
+* **Buying an NFT:** User clicks "Buy" → MetaMask prompts for signature + ETH → Transaction sent to Smart Contract → Smart Contract transfers NFT and funds → UI refreshes directly from the Blockchain.
+* **Submitting an NFT:** User enters Contract Address + Token ID → Frontend sends `POST` to Backend → Backend saves to `db.json` → Explore page reads new ID and fetches data from the blockchain.
+
+---
+
+## Audit Verification Guide
+
+This section is dedicated to auditors to quickly verify that all project requirements have been met.
+
+### 1. Read the documentation
+* **Instructions to deploy and launch:** Available in the **Step-by-Step Setup** section above.
+* **Smart contract compile correctly:** Verified by running `npm run compile`.
+* **Deploy sample NFTs:** Verified by running `npm run samples`. This automatically mints and lists NFTs.
+* **Remaining available NFT:** As detailed in step 5, **NFT #6** is explicitly minted on the blockchain but left out of the database for the auditor to test the "Submit an NFT" functionality.
+* **Website available at localhost:8080:** Running `npm run serve` hosts the production UI at exactly `http://localhost:8080`.
+
+### 2. Serve the interface
+* **Include a title and a theme:** The app is titled "NEONEXUS" and features a cohesive futuristic, neon-glassmorphism theme.
+* **Frontpage display two NFTs:** The **Welcome Page** displays two featured NFTs dynamically.
+* **Connect wallet button:** Present in the top navigation bar.
+* **Explore page:** Accessible via the navigation bar. It dynamically loads all known NFTs using pagination/scrolling logic.
+* **Submit an NFT page:** Accessible via the "Submit" button in the navigation or from the Explore page.
+
+### 3. Submit an NFT
+* **Allow submission:** Navigate to the Submit page. Enter the `sampleNFT` contract address (found in your terminal after deployment or in `server/db.json`) and enter Token ID **6**.
+* **NFT displayed in explore:** After submission, navigate to the Explore page. NFT #6 will now correctly load its image and data directly from the blockchain.
+
+### 4. Connect a wallet
+* **Browser wallet:** Clicking "Connect Wallet" prompts MetaMask for connection.
+* **Portfolio page:** Once connected, the "Portfolio" tab appears in the navigation bar. It displays only the NFTs currently owned by the connected wallet address.
+
+### 5. Buy an NFT
+* **Buy functionality:** On the Explore page, select NFT #0 (which is listed for 1 ETH). Click "Buy Now", approve the MetaMask transaction.
+* **Portfolio update:** Once the transaction confirms, navigating to your Portfolio will show the newly purchased NFT.
+
+### 6. Try to sell the NFT
+* **List for sale:** Go to your Portfolio, click on an NFT you own, enter a price in ETH, and click "List for Sale". You will be asked to approve the marketplace contract and then set the price.
+* **Buy with another account:** Switch to a different account in MetaMask, go to the Explore page, and you will see the NFT is now available for purchase by the new account.
+
+### 7. Bonus Features
+* **Filters:** The Explore page includes a sidebar/dropdown to filter NFTs by "For Sale" or "On Auction".
+* **Auction NFTs:** The smart contract supports auctions. `npm run samples` automatically puts NFT #2 and #3 on auction. 
+* **Auction Mechanics:** Users can place bids. Once the block timestamp exceeds the auction duration, anyone can trigger `endAuction` to attribute the NFT to the highest bidder.
