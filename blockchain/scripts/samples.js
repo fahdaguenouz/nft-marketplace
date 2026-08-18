@@ -34,7 +34,27 @@ async function main() {
     "/imgs/frog.jpeg",
     "/imgs/monkey.jpeg",
     "/imgs/rob.jpeg",
-    "/imgs/monk.jpeg"
+    "/imgs/monk.jpeg",
+    "/imgs/cat.jpeg",
+    "/imgs/cat1.jpeg",
+    "/imgs/cat2.jpeg",
+    "/imgs/cat3.jpeg",
+    "/imgs/cat4.jpeg",
+    "/imgs/cat5.jpeg",
+    "/imgs/cat6.jpeg",
+    "/imgs/cat7.jpeg",
+    "/imgs/cat8.jpeg",
+    "/imgs/cat9.jpeg",
+    "/imgs/meme1.jpeg",
+    "/imgs/meme2.jpeg",
+    "/imgs/meme3.jpeg",
+    "/imgs/meme4.jpeg",
+    "/imgs/meme5.jpeg",
+    "/imgs/meme6.jpeg",
+    "/imgs/meme7.jpeg",
+    "/imgs/meme8.jpeg",
+    "/imgs/meme9.jpeg",
+
   ];
   
   const metadatas = [];
