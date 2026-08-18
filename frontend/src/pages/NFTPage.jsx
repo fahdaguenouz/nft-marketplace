@@ -16,6 +16,9 @@ function NFTPage() {
   // Forms
   const [listPrice, setListPrice] = useState('');
   const [bidAmount, setBidAmount] = useState('');
+  const [auctionMinPrice, setAuctionMinPrice] = useState('');
+  const [auctionDurationHours, setAuctionDurationHours] = useState('');
+  const [auctionDurationMinutes, setAuctionDurationMinutes] = useState('');
 
   const loadData = async () => {
     try {
@@ -78,7 +81,7 @@ function NFTPage() {
       loadData();
     } catch (e) {
       console.error(e);
-      alert("Bid failed");
+      alert("Bid failed ,please check the amount");
     }
   };
 
@@ -101,6 +104,33 @@ function NFTPage() {
     } catch (e) {
       console.error(e);
       alert("Listing failed");
+    }
+  };
+
+  const handleCreateAuction = async () => {
+    if (!signer) return alert("Please connect wallet");
+    if (!auctionMinPrice || (!auctionDurationHours && !auctionDurationMinutes)) return alert("Please provide min price and duration");
+    try {
+      const nftContract = new ethers.Contract(contract, abi.SampleNFT, signer);
+      const approved = await nftContract.getApproved(tokenId);
+      
+      if (approved !== marketAddr) {
+        const txApprove = await nftContract.approve(marketAddr, tokenId);
+        await txApprove.wait();
+      }
+
+      const mktContract = new ethers.Contract(marketAddr, abi.NFTMarketplace, signer);
+      const hoursInSecs = parseInt(auctionDurationHours || 0) * 3600;
+      const minsInSecs = parseInt(auctionDurationMinutes || 0) * 60;
+      const durationSeconds = hoursInSecs + minsInSecs;
+      
+      const tx = await mktContract.createAuction(contract, tokenId, ethers.parseEther(auctionMinPrice), durationSeconds);
+      await tx.wait();
+      alert("Auction created successfully!");
+      loadData();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to create auction");
     }
   };
 
@@ -192,27 +222,35 @@ function NFTPage() {
               />
               <button className="btn" onClick={handleList}>List for Sale</button>
             </div>
+            <div className="flex gap-2 mt-4">
+              <input 
+                type="number" 
+                value={auctionMinPrice} 
+                onChange={e => setAuctionMinPrice(e.target.value)} 
+                placeholder="Min Price (ETH)" 
+                style={{ marginBottom: 0 }}
+              />
+              <input 
+                type="number" 
+                value={auctionDurationHours} 
+                onChange={e => setAuctionDurationHours(e.target.value)} 
+                placeholder="Duration (Hours)" 
+                style={{ marginBottom: 0 }}
+                min="0"
+              />
+              <input 
+                type="number" 
+                value={auctionDurationMinutes} 
+                onChange={e => setAuctionDurationMinutes(e.target.value)} 
+                placeholder="Duration (Mins)" 
+                style={{ marginBottom: 0 }}
+                min="0"
+              />
+              <button className="btn btn-outline" onClick={handleCreateAuction}>Create Auction</button>
+            </div>
           </div>
         )}
 
-        <div className="glass-panel mt-4">
-          <h3>Transfer History</h3>
-          {transfers.length === 0 ? (
-            <p className="text-muted mt-2">No transfers found.</p>
-          ) : (
-            <div style={{ marginTop: '15px', maxHeight: '200px', overflowY: 'auto' }}>
-              {transfers.map((tx, idx) => (
-                <div key={idx} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: '0.9rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                    <span style={{ color: 'var(--primary-color)' }}>From: {tx.from.substring(0, 8)}...</span>
-                    <span style={{ color: 'var(--secondary-color)' }}>To: {tx.to.substring(0, 8)}...</span>
-                  </div>
-                  <div className="text-muted" style={{ fontSize: '0.8rem' }}>{tx.date}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

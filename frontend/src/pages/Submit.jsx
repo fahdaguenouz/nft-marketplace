@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ethers } from 'ethers';
+import { Web3Context } from '../App';
+import abi from '../abi.json';
 
 function Submit() {
   const navigate = useNavigate();
+  const { provider } = useContext(Web3Context);
   const [contract, setContract] = useState('');
   const [startTokenId, setStartTokenId] = useState('');
   const [endTokenId, setEndTokenId] = useState('');
@@ -18,8 +22,22 @@ function Submit() {
       const end = endTokenId ? parseInt(endTokenId) : start;
       
       const newNfts = [];
+      const readProvider = provider || new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+      const nftContract = new ethers.Contract(contract, abi.SampleNFT, readProvider);
+
       for (let i = start; i <= end; i++) {
-        newNfts.push({ contract, tokenId: i });
+        try {
+          await nftContract.ownerOf(i);
+          newNfts.push({ contract, tokenId: i });
+        } catch (error) {
+          console.warn(`Token ${i} does not exist. Skipping.`);
+        }
+      }
+
+      if (newNfts.length === 0) {
+        alert("No valid NFTs found in that range.");
+        setLoading(false);
+        return;
       }
 
       const res = await fetch('http://localhost:8080/api/nfts', {
